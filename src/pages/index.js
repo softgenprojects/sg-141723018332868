@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,22 +7,23 @@ import { useToast } from "@/components/ui/use-toast";
 import MapBox from '@/components/MapBox';
 import Header from '@/components/Header';
 import { usePosts } from '@/hooks/usePosts';
+import { logError } from '@/utils/errorLogging';
 
 export default function Home() {
   const [content, setContent] = useState('');
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
   const { toast } = useToast();
-  const { posts, mutate, error } = usePosts();
+  const { posts, mutate, error, isLoading } = usePosts();
 
   useEffect(() => {
     if (error) {
-      console.error('Error fetching posts:', error);
+      logError('Error fetching posts:', error);
       toast({ title: "Error", description: "Failed to fetch posts", variant: "destructive" });
     }
   }, [error, toast]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
     try {
       const response = await fetch('/api/posts', {
@@ -37,13 +38,13 @@ export default function Home() {
       setLongitude('');
       mutate();
     } catch (error) {
-      console.error('Error creating post:', error);
+      logError('Error creating post:', error);
       toast({ title: "Error", description: error.message, variant: "destructive" });
     }
-  };
+  }, [content, latitude, longitude, mutate, toast]);
 
   if (error) return <div>Failed to load posts</div>;
-  if (!posts) return <div>Loading...</div>;
+  if (isLoading) return <div>Loading...</div>;
 
   return (
     <div className="flex flex-col min-h-screen">

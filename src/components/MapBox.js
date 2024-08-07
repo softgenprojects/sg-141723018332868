@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 
 mapboxgl.accessToken = 'pk.eyJ1Ijoibm92ZWxpY2EiLCJhIjoiY2xjdmF0NjR6MHMwZjN3cmxnMHFpaGFjMSJ9.bBri5mIGTCFnINYa75jS4w';
@@ -7,15 +7,17 @@ export default function MapBox({ posts, setLatitude, setLongitude }) {
   const mapContainer = useRef(null);
   const map = useRef(null);
 
-  useEffect(() => {
-    if (map.current) return; // initialize map only once
+  const memoizedPosts = useMemo(() => posts, [posts]);
+
+  const initializeMap = useCallback(() => {
+    if (map.current) return;
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/novelica/cldzj4ky0003h01qkjx9xqfhk',
-      center: [-122.4194, 37.7749], // San Francisco coordinates
+      center: [-122.4194, 37.7749],
       zoom: 12,
-      pitch: 60, // Tilt the map for 3D effect
-      bearing: -60, // Rotate the map for 3D effect
+      pitch: 60,
+      bearing: -60,
     });
 
     map.current.on('load', () => {
@@ -35,16 +37,15 @@ export default function MapBox({ posts, setLatitude, setLongitude }) {
   }, [setLatitude, setLongitude]);
 
   useEffect(() => {
-    if (!map.current || !posts) return;
+    initializeMap();
+  }, [initializeMap]);
 
-    // Remove existing markers
-    const existingMarkers = document.getElementsByClassName('mapboxgl-marker');
-    while(existingMarkers[0]) {
-      existingMarkers[0].parentNode.removeChild(existingMarkers[0]);
-    }
+  useEffect(() => {
+    if (!map.current || !memoizedPosts) return;
 
-    // Add new markers
-    posts.forEach((post) => {
+    const markers = [];
+
+    memoizedPosts.forEach((post) => {
       const el = document.createElement('div');
       el.className = 'marker';
       el.style.backgroundColor = '#3FB1CE';
@@ -52,12 +53,18 @@ export default function MapBox({ posts, setLatitude, setLongitude }) {
       el.style.height = '20px';
       el.style.borderRadius = '50%';
 
-      new mapboxgl.Marker(el)
+      const marker = new mapboxgl.Marker(el)
         .setLngLat([post.longitude, post.latitude])
         .setPopup(new mapboxgl.Popup().setHTML(`<p>${post.content}</p>`))
         .addTo(map.current);
+
+      markers.push(marker);
     });
-  }, [posts]);
+
+    return () => {
+      markers.forEach(marker => marker.remove());
+    };
+  }, [memoizedPosts]);
 
   return <div ref={mapContainer} className="w-full h-[600px]" />;
 }
