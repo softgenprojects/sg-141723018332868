@@ -1,6 +1,7 @@
 import { useEffect, useRef, useMemo, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { logError } from '@/utils/errorLogging';
+import { isWithinSF } from '@/utils/coordinates';
 
 mapboxgl.accessToken = 'pk.eyJ1Ijoibm92ZWxpY2EiLCJhIjoiY2xjdmF0NjR6MHMwZjN3cmxnMHFpaGFjMSJ9.bBri5mIGTCFnINYa75jS4w';
 
@@ -14,6 +15,7 @@ function MapBox({ posts, onMapClick }) {
   const initializeMap = useCallback(() => {
     if (map.current) return;
     try {
+      console.log('Initializing map');
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
         style: 'mapbox://styles/novelica/cldzj4ky0003h01qkjx9xqfhk',
@@ -24,6 +26,7 @@ function MapBox({ posts, onMapClick }) {
       });
 
       map.current.on('load', () => {
+        console.log('Map loaded');
         map.current.addSource('mapbox-dem', {
           'type': 'raster-dem',
           'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
@@ -34,6 +37,7 @@ function MapBox({ posts, onMapClick }) {
       });
 
       map.current.on('click', (e) => {
+        console.log('Map clicked', e.lngLat);
         onMapClick(e.lngLat.lat, e.lngLat.lng);
       });
     } catch (error) {
@@ -48,6 +52,8 @@ function MapBox({ posts, onMapClick }) {
   useEffect(() => {
     if (!map.current || !memoizedPosts) return;
 
+    console.log('Updating markers', memoizedPosts);
+
     try {
       // Remove existing markers
       markers.current.forEach(marker => marker.remove());
@@ -55,6 +61,12 @@ function MapBox({ posts, onMapClick }) {
 
       // Add new markers
       memoizedPosts.forEach((post) => {
+        if (!isWithinSF(post.latitude, post.longitude)) {
+          console.warn('Post coordinates outside SF:', post);
+          return;
+        }
+
+        console.log('Creating marker for post', post);
         const el = document.createElement('div');
         el.className = 'marker';
         el.style.backgroundColor = '#3FB1CE';

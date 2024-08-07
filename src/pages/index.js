@@ -7,30 +7,27 @@ import { CreatePostDialog } from '@/components/CreatePostDialog';
 import { usePosts } from '@/hooks/usePosts';
 import { logError } from '@/utils/errorLogging';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import { generateRandomSFCoordinates } from '@/utils/coordinates';
 
 const LazyMapBox = lazy(() => import('@/components/MapBox'));
 
 export default function Home() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState({ latitude: '', longitude: '' });
+  const [selectedLocation, setSelectedLocation] = useState(generateRandomSFCoordinates());
   const { toast } = useToast();
-  const { posts, mutate, error, isLoading } = usePosts();
+  const { posts, createPost, error, isLoading } = usePosts();
 
   const handleMapClick = useCallback((lat, lng) => {
+    console.log('Map clicked', lat, lng);
     setSelectedLocation({ latitude: lat.toFixed(6), longitude: lng.toFixed(6) });
     setIsDialogOpen(true);
   }, []);
 
   const handleCreatePost = async (postData) => {
     try {
-      const response = await fetch('/api/posts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...postData, userId: 1 }),
-      });
-      if (!response.ok) throw new Error('Failed to create post');
+      await createPost({ ...postData, userId: 1 });
       toast({ title: "Success", description: "Post created successfully!" });
-      mutate();
+      setIsDialogOpen(false);
     } catch (error) {
       logError('Error creating post:', error);
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -39,6 +36,8 @@ export default function Home() {
 
   if (error) return <div>Failed to load posts</div>;
   if (isLoading) return <div>Loading...</div>;
+
+  console.log('Rendering Home component', posts);
 
   return (
     <ErrorBoundary>
