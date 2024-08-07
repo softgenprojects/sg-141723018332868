@@ -11,9 +11,21 @@ export default function MapBox({ posts, setLatitude, setLongitude }) {
     if (map.current) return; // initialize map only once
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v11',
+      style: 'mapbox://styles/mapbox/satellite-streets-v11',
       center: [-122.4194, 37.7749], // San Francisco coordinates
-      zoom: 12
+      zoom: 12,
+      pitch: 60, // Tilt the map for 3D effect
+      bearing: -60, // Rotate the map for 3D effect
+    });
+
+    map.current.on('load', () => {
+      map.current.addSource('mapbox-dem', {
+        'type': 'raster-dem',
+        'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+        'tileSize': 512,
+        'maxzoom': 14
+      });
+      map.current.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
     });
 
     map.current.on('click', (e) => {

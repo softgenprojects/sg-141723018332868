@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,7 +13,14 @@ export default function Home() {
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
   const { toast } = useToast();
-  const { posts, mutate } = usePosts();
+  const { posts, mutate, error } = usePosts();
+
+  useEffect(() => {
+    if (error) {
+      console.error('Error fetching posts:', error);
+      toast({ title: "Error", description: "Failed to fetch posts", variant: "destructive" });
+    }
+  }, [error, toast]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,9 +37,13 @@ export default function Home() {
       setLongitude('');
       mutate();
     } catch (error) {
+      console.error('Error creating post:', error);
       toast({ title: "Error", description: error.message, variant: "destructive" });
     }
   };
+
+  if (error) return <div>Failed to load posts</div>;
+  if (!posts) return <div>Loading...</div>;
 
   return (
     <div className="flex flex-col min-h-screen">
