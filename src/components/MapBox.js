@@ -8,7 +8,7 @@ mapboxgl.accessToken = 'pk.eyJ1Ijoibm92ZWxpY2EiLCJhIjoiY2xjdmF0NjR6MHMwZjN3cmxnM
 function MapBox({ posts, onMapClick }) {
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const markers = useRef([]);
+  const markers = useRef({});
 
   const memoizedPosts = useMemo(() => posts, [posts]);
 
@@ -55,31 +55,40 @@ function MapBox({ posts, onMapClick }) {
     console.log('Updating markers', memoizedPosts);
 
     try {
-      // Remove existing markers
-      markers.current.forEach(marker => marker.remove());
-      markers.current = [];
+      // Remove markers that are no longer in the posts array
+      Object.keys(markers.current).forEach(id => {
+        if (!memoizedPosts.find(post => post.id.toString() === id)) {
+          markers.current[id].remove();
+          delete markers.current[id];
+        }
+      });
 
-      // Add new markers
+      // Add new markers or update existing ones
       memoizedPosts.forEach((post) => {
         if (!isWithinSF(post.latitude, post.longitude)) {
           console.warn('Post coordinates outside SF:', post);
           return;
         }
 
-        console.log('Creating marker for post', post);
-        const el = document.createElement('div');
-        el.className = 'marker';
-        el.style.backgroundColor = '#3FB1CE';
-        el.style.width = '20px';
-        el.style.height = '20px';
-        el.style.borderRadius = '50%';
+        if (!markers.current[post.id]) {
+          console.log('Creating marker for post', post);
+          const el = document.createElement('div');
+          el.className = 'marker';
+          el.style.backgroundColor = '#3FB1CE';
+          el.style.width = '20px';
+          el.style.height = '20px';
+          el.style.borderRadius = '50%';
 
-        const marker = new mapboxgl.Marker(el)
-          .setLngLat([post.longitude, post.latitude])
-          .setPopup(new mapboxgl.Popup().setHTML(`<p>${post.content}</p>`))
-          .addTo(map.current);
+          const marker = new mapboxgl.Marker(el)
+            .setLngLat([post.longitude, post.latitude])
+            .setPopup(new mapboxgl.Popup().setHTML(`<p>${post.content}</p>`))
+            .addTo(map.current);
 
-        markers.current.push(marker);
+          markers.current[post.id] = marker;
+        } else {
+          // Update existing marker if needed
+          markers.current[post.id].setLngLat([post.longitude, post.latitude]);
+        }
       });
     } catch (error) {
       logError('Error adding markers to map:', error);

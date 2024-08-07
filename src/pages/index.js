@@ -9,6 +9,7 @@ import { logError } from '@/utils/errorLogging';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { generateRandomSFCoordinates } from '@/utils/coordinates';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Spinner } from "@/components/ui/spinner";
 
 const LazyMapBox = lazy(() => import('@/components/MapBox'));
 
@@ -39,9 +40,6 @@ export default function Home() {
     logError('Error fetching posts:', error);
     return <div>Failed to load posts. Please try again later.</div>;
   }
-  if (isLoading) return <div>Loading...</div>;
-
-  console.log('Rendering Home component', posts);
 
   return (
     <ErrorBoundary>
@@ -53,7 +51,7 @@ export default function Home() {
       <div className="flex flex-col h-screen">
         <Header />
         <main className="flex-grow relative">
-          <Suspense fallback={<div>Loading map...</div>}>
+          <Suspense fallback={<div className="flex items-center justify-center h-full"><Spinner /></div>}>
             <LazyMapBox posts={posts} onMapClick={handleMapClick} />
           </Suspense>
           <TooltipProvider>
@@ -76,16 +74,18 @@ export default function Home() {
           <nav className="absolute bottom-4 left-4 bg-white p-2 rounded shadow" aria-label="Pagination">
             <button 
               onClick={prevPage}
-              disabled={page === 1}
+              disabled={page === 1 || isLoading}
               aria-label="Previous page"
               className="btn btn-secondary mr-2"
             >
               Previous
             </button>
-            <span className="mx-2" aria-current="page">Page {page} of {totalPages}</span>
+            <span className="mx-2" aria-current="page">
+              {isLoading ? <Spinner size="sm" /> : `Page ${page} of ${totalPages}`}
+            </span>
             <button 
               onClick={nextPage}
-              disabled={page === totalPages}
+              disabled={page === totalPages || isLoading}
               aria-label="Next page"
               className="btn btn-secondary ml-2"
             >

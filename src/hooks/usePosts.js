@@ -1,11 +1,12 @@
 import useSWR from 'swr';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { logError } from '@/utils/errorLogging';
 
 const fetcher = (...args) => fetch(...args).then(res => res.json());
 
 export function usePosts(pageSize = 10) {
   const [page, setPage] = useState(1);
+  const cache = useRef({});
   const { data, error, mutate } = useSWR(`/api/posts?page=${page}&pageSize=${pageSize}`, fetcher);
 
   const createPost = useCallback(async (postData) => {
@@ -35,8 +36,13 @@ export function usePosts(pageSize = 10) {
     setPage(p => Math.max(1, p - 1));
   }, []);
 
+  // Simple caching mechanism
+  if (data && !cache.current[page]) {
+    cache.current[page] = data;
+  }
+
   return {
-    posts: data?.posts || [],
+    posts: data?.posts || cache.current[page]?.posts || [],
     isLoading: !error && !data,
     isError: error,
     mutate,
@@ -44,6 +50,6 @@ export function usePosts(pageSize = 10) {
     nextPage,
     prevPage,
     page,
-    totalPages: data?.totalPages || 0
+    totalPages: data?.totalPages || cache.current[page]?.totalPages || 0
   };
 }
