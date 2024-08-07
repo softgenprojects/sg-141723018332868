@@ -4,11 +4,15 @@ import { logError } from '@/utils/errorLogging';
 const prisma = new PrismaClient();
 
 export default async function handler(req, res) {
+  console.log('API route handler called');
+  console.log('Environment variables:', process.env);
+
   try {
     await prisma.$connect();
     console.log('Database connected successfully');
 
     if (req.method === 'POST') {
+      console.log('Received POST request:', req.body);
       const { content, latitude, longitude, userId } = req.body;
       const post = await prisma.post.create({
         data: {
@@ -18,8 +22,10 @@ export default async function handler(req, res) {
           userId: parseInt(userId),
         },
       });
+      console.log('Post created:', post);
       res.status(201).json(post);
     } else if (req.method === 'GET') {
+      console.log('Received GET request:', req.query);
       const page = parseInt(req.query.page) || 1;
       const pageSize = parseInt(req.query.pageSize) || 10;
       const skip = (page - 1) * pageSize;
@@ -34,6 +40,7 @@ export default async function handler(req, res) {
 
       const total = await prisma.post.count();
 
+      console.log(`Retrieved ${posts.length} posts`);
       res.status(200).json({
         posts,
         page,
@@ -47,6 +54,7 @@ export default async function handler(req, res) {
     }
   } catch (error) {
     logError('API Error:', error);
+    console.error('API Error:', error);
     res.status(500).json({ error: 'Internal Server Error', details: error.message });
   } finally {
     await prisma.$disconnect();

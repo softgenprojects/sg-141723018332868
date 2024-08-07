@@ -2,8 +2,19 @@ import useSWR from 'swr';
 import { useState, useCallback, useRef } from 'react';
 import { logError } from '@/utils/errorLogging';
 
-const API_URL = 'http://localhost:3014'; // Updated to use port 3014
-const fetcher = (...args) => fetch(...args).then(res => res.json());
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3014';
+const fetcher = async (...args) => {
+  try {
+    const response = await fetch(...args);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  } catch (error) {
+    logError('Error fetching data:', error);
+    throw error;
+  }
+};
 
 export function usePosts(pageSize = 10) {
   const [page, setPage] = useState(1);

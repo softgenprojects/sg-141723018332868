@@ -7,6 +7,7 @@ import { CreatePostDialog } from '@/components/CreatePostDialog';
 import { usePosts } from '@/hooks/usePosts';
 import { logError } from '@/utils/errorLogging';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import NetworkErrorBoundary from '@/components/NetworkErrorBoundary';
 import { generateRandomSFCoordinates } from '@/utils/coordinates';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Spinner } from "@/components/ui/spinner";
@@ -68,11 +69,13 @@ export default function Home() {
       <div className="flex flex-col h-screen">
         <Header />
         <main className="flex-grow relative">
-          <ErrorBoundary fallback={<div>Error loading map. Please refresh the page.</div>}>
-            <Suspense fallback={<div className="flex items-center justify-center h-full"><Spinner /></div>}>
-              <LazyMapBox posts={posts} onMapClick={handleMapClick} />
-            </Suspense>
-          </ErrorBoundary>
+          <NetworkErrorBoundary>
+            <ErrorBoundary fallback={<div>Error loading map. Please refresh the page.</div>}>
+              <Suspense fallback={<div className="flex items-center justify-center h-full"><Spinner /></div>}>
+                <LazyMapBox posts={posts} onMapClick={handleMapClick} />
+              </Suspense>
+            </ErrorBoundary>
+          </NetworkErrorBoundary>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
