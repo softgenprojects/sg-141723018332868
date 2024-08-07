@@ -11,7 +11,7 @@ export default function MapBox({ posts, setLatitude, setLongitude }) {
     if (map.current) return; // initialize map only once
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/satellite-streets-v11',
+      style: 'mapbox://styles/novelica/cldzj4ky0003h01qkjx9xqfhk',
       center: [-122.4194, 37.7749], // San Francisco coordinates
       zoom: 12,
       pitch: 60, // Tilt the map for 3D effect
