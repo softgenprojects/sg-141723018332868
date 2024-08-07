@@ -8,6 +8,7 @@ import { usePosts } from '@/hooks/usePosts';
 import { logError } from '@/utils/errorLogging';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { generateRandomSFCoordinates } from '@/utils/coordinates';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const LazyMapBox = lazy(() => import('@/components/MapBox'));
 
@@ -16,6 +17,8 @@ export default function Home() {
   const [selectedLocation, setSelectedLocation] = useState(generateRandomSFCoordinates());
   const { toast } = useToast();
   const { posts, createPost, error, isLoading } = usePosts();
+  const [currentPage, setCurrentPage] = useState(1);
+  const postsPerPage = 10;
 
   const handleMapClick = useCallback((lat, lng) => {
     console.log('Map clicked', lat, lng);
@@ -34,6 +37,8 @@ export default function Home() {
     }
   };
 
+  const paginatedPosts = posts ? posts.slice((currentPage - 1) * postsPerPage, currentPage * postsPerPage) : [];
+
   if (error) return <div>Failed to load posts</div>;
   if (isLoading) return <div>Loading...</div>;
 
@@ -50,9 +55,18 @@ export default function Home() {
         <Header />
         <main className="flex-grow relative">
           <Suspense fallback={<div>Loading map...</div>}>
-            <LazyMapBox posts={posts} onMapClick={handleMapClick} />
+            <LazyMapBox posts={paginatedPosts} onMapClick={handleMapClick} />
           </Suspense>
-          <FloatingActionButton onClick={() => setIsDialogOpen(true)} />
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <FloatingActionButton onClick={() => setIsDialogOpen(true)} />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Create a new post</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <CreatePostDialog
             isOpen={isDialogOpen}
             onClose={() => setIsDialogOpen(false)}
@@ -60,6 +74,11 @@ export default function Home() {
             latitude={selectedLocation.latitude}
             longitude={selectedLocation.longitude}
           />
+          <div className="absolute bottom-4 left-4 bg-white p-2 rounded shadow">
+            <button onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}>Previous</button>
+            <span className="mx-2">Page {currentPage}</span>
+            <button onClick={() => setCurrentPage(prev => prev + 1)}>Next</button>
+          </div>
         </main>
       </div>
     </ErrorBoundary>
