@@ -1,10 +1,11 @@
 import { PrismaClient } from '@prisma/client';
+import { logError } from '@/utils/errorLogging';
 
 const prisma = new PrismaClient();
 
 export default async function handler(req, res) {
-  if (req.method === 'POST') {
-    try {
+  try {
+    if (req.method === 'POST') {
       const { content, latitude, longitude, userId } = req.body;
       const post = await prisma.post.create({
         data: {
@@ -15,12 +16,7 @@ export default async function handler(req, res) {
         },
       });
       res.status(201).json(post);
-    } catch (error) {
-      console.error('Error creating post:', error);
-      res.status(400).json({ error: 'Unable to create post' });
-    }
-  } else if (req.method === 'GET') {
-    try {
+    } else if (req.method === 'GET') {
       const page = parseInt(req.query.page) || 1;
       const pageSize = parseInt(req.query.pageSize) || 10;
       const skip = (page - 1) * pageSize;
@@ -42,12 +38,14 @@ export default async function handler(req, res) {
         total,
         totalPages: Math.ceil(total / pageSize),
       });
-    } catch (error) {
-      console.error('Error fetching posts:', error);
-      res.status(400).json({ error: 'Unable to fetch posts' });
+    } else {
+      res.setHeader('Allow', ['POST', 'GET']);
+      res.status(405).end(`Method ${req.method} Not Allowed`);
     }
-  } else {
-    res.setHeader('Allow', ['POST', 'GET']);
-    res.status(405).end(`Method ${req.method} Not Allowed`);
+  } catch (error) {
+    logError('API Error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  } finally {
+    await prisma.$disconnect();
   }
 }
