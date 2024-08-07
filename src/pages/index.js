@@ -47,7 +47,7 @@ export default function Home() {
   if (isLoading) return <div>Loading...</div>;
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-gray-100">
       <Header />
       <main className="flex-grow flex flex-col md:flex-row p-4 space-y-4 md:space-y-0 md:space-x-4">
         <div className="w-full md:w-2/3">
@@ -64,6 +64,7 @@ export default function Home() {
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 className="w-full"
+                aria-label="Post content"
               />
               <div className="flex space-x-2">
                 <Input
@@ -72,6 +73,7 @@ export default function Home() {
                   value={latitude}
                   onChange={(e) => setLatitude(e.target.value)}
                   step="any"
+                  aria-label="Latitude"
                 />
                 <Input
                   type="number"
@@ -79,6 +81,7 @@ export default function Home() {
                   value={longitude}
                   onChange={(e) => setLongitude(e.target.value)}
                   step="any"
+                  aria-label="Longitude"
                 />
               </div>
               <Button type="submit" className="w-full">
