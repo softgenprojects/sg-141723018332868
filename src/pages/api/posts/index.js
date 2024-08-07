@@ -16,6 +16,7 @@ export default async function handler(req, res) {
       });
       res.status(201).json(post);
     } catch (error) {
+      console.error('Error creating post:', error);
       res.status(400).json({ error: 'Unable to create post' });
     }
   } else if (req.method === 'GET') {
@@ -42,6 +43,7 @@ export default async function handler(req, res) {
         totalPages: Math.ceil(total / pageSize),
       });
     } catch (error) {
+      console.error('Error fetching posts:', error);
       res.status(400).json({ error: 'Unable to fetch posts' });
     }
   } else {

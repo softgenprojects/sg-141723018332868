@@ -16,9 +16,7 @@ export default function Home() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(generateRandomSFCoordinates());
   const { toast } = useToast();
-  const { posts, createPost, error, isLoading } = usePosts();
-  const [currentPage, setCurrentPage] = useState(1);
-  const postsPerPage = 10;
+  const { posts, createPost, error, isLoading, nextPage, prevPage, page, totalPages } = usePosts();
 
   const handleMapClick = useCallback((lat, lng) => {
     console.log('Map clicked', lat, lng);
@@ -37,9 +35,10 @@ export default function Home() {
     }
   };
 
-  const paginatedPosts = posts ? posts.slice((currentPage - 1) * postsPerPage, currentPage * postsPerPage) : [];
-
-  if (error) return <div>Failed to load posts</div>;
+  if (error) {
+    logError('Error fetching posts:', error);
+    return <div>Failed to load posts. Please try again later.</div>;
+  }
   if (isLoading) return <div>Loading...</div>;
 
   console.log('Rendering Home component', posts);
@@ -55,7 +54,7 @@ export default function Home() {
         <Header />
         <main className="flex-grow relative">
           <Suspense fallback={<div>Loading map...</div>}>
-            <LazyMapBox posts={paginatedPosts} onMapClick={handleMapClick} />
+            <LazyMapBox posts={posts} onMapClick={handleMapClick} />
           </Suspense>
           <TooltipProvider>
             <Tooltip>
@@ -76,17 +75,17 @@ export default function Home() {
           />
           <nav className="absolute bottom-4 left-4 bg-white p-2 rounded shadow" aria-label="Pagination">
             <button 
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
+              onClick={prevPage}
+              disabled={page === 1}
               aria-label="Previous page"
               className="btn btn-secondary mr-2"
             >
               Previous
             </button>
-            <span className="mx-2" aria-current="page">Page {currentPage}</span>
+            <span className="mx-2" aria-current="page">Page {page} of {totalPages}</span>
             <button 
-              onClick={() => setCurrentPage(prev => prev + 1)}
-              disabled={paginatedPosts.length < postsPerPage}
+              onClick={nextPage}
+              disabled={page === totalPages}
               aria-label="Next page"
               className="btn btn-secondary ml-2"
             >

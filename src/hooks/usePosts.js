@@ -26,7 +26,7 @@ export function usePosts(pageSize = 10) {
   }, [mutate]);
 
   const nextPage = useCallback(() => {
-    if (data && data.length === pageSize) {
+    if (data && data.posts.length === pageSize) {
       setPage(p => p + 1);
     }
   }, [data, pageSize]);
@@ -36,13 +36,14 @@ export function usePosts(pageSize = 10) {
   }, []);
 
   return {
-    posts: data,
+    posts: data?.posts || [],
     isLoading: !error && !data,
     isError: error,
     mutate,
     createPost,
     nextPage,
     prevPage,
-    page
+    page,
+    totalPages: data?.totalPages || 0
   };
 }
