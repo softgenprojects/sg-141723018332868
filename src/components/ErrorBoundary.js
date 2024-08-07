@@ -1,4 +1,5 @@
 import React from 'react';
+import { logError } from '@/utils/errorLogging';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -15,7 +16,7 @@ class ErrorBoundary extends React.Component {
       error: error,
       errorInfo: errorInfo
     });
-    console.error("Uncaught error:", error, errorInfo);
+    logError('Uncaught error:', error, errorInfo);
   }
 
   render() {
@@ -29,6 +30,12 @@ class ErrorBoundary extends React.Component {
             <br />
             {this.state.errorInfo && this.state.errorInfo.componentStack}
           </details>
+          <button
+            className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+            onClick={() => window.location.reload()}
+          >
+            Reload Page
+          </button>
         </div>
       );
     }

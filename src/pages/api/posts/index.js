@@ -5,6 +5,9 @@ const prisma = new PrismaClient();
 
 export default async function handler(req, res) {
   try {
+    await prisma.$connect();
+    console.log('Database connected successfully');
+
     if (req.method === 'POST') {
       const { content, latitude, longitude, userId } = req.body;
       const post = await prisma.post.create({
@@ -44,7 +47,7 @@ export default async function handler(req, res) {
     }
   } catch (error) {
     logError('API Error:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: 'Internal Server Error', details: error.message });
   } finally {
     await prisma.$disconnect();
   }
