@@ -7,7 +7,11 @@ const fetcher = (...args) => fetch(...args).then(res => res.json());
 export function usePosts(pageSize = 10) {
   const [page, setPage] = useState(1);
   const cache = useRef({});
-  const { data, error, mutate } = useSWR(`/api/posts?page=${page}&pageSize=${pageSize}`, fetcher);
+  const { data, error, mutate } = useSWR(`/api/posts?page=${page}&pageSize=${pageSize}`, fetcher, {
+    onSuccess: (data) => {
+      cache.current[page] = data;
+    },
+  });
 
   const createPost = useCallback(async (postData) => {
     try {
@@ -18,7 +22,7 @@ export function usePosts(pageSize = 10) {
       });
       if (!response.ok) throw new Error('Failed to create post');
       const newPost = await response.json();
-      mutate();
+      await mutate();
       return newPost;
     } catch (error) {
       logError('Error creating post:', error);
@@ -27,19 +31,14 @@ export function usePosts(pageSize = 10) {
   }, [mutate]);
 
   const nextPage = useCallback(() => {
-    if (data && data.posts.length === pageSize) {
+    if (data && data.posts.length === pageSize && page < data.totalPages) {
       setPage(p => p + 1);
     }
-  }, [data, pageSize]);
+  }, [data, pageSize, page]);
 
   const prevPage = useCallback(() => {
     setPage(p => Math.max(1, p - 1));
   }, []);
-
-  // Simple caching mechanism
-  if (data && !cache.current[page]) {
-    cache.current[page] = data;
-  }
 
   return {
     posts: data?.posts || cache.current[page]?.posts || [],

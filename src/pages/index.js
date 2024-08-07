@@ -1,4 +1,4 @@
-import { useState, useCallback, Suspense, lazy } from 'react';
+import { useState, useCallback, Suspense, lazy, useTransition } from 'react';
 import Head from 'next/head';
 import { useToast } from "@/components/ui/use-toast";
 import Header from '@/components/Header';
@@ -18,22 +18,39 @@ export default function Home() {
   const [selectedLocation, setSelectedLocation] = useState(generateRandomSFCoordinates());
   const { toast } = useToast();
   const { posts, createPost, error, isLoading, nextPage, prevPage, page, totalPages } = usePosts();
+  const [isPending, startTransition] = useTransition();
 
   const handleMapClick = useCallback((lat, lng) => {
     console.log('Map clicked', lat, lng);
-    setSelectedLocation({ latitude: lat.toFixed(6), longitude: lng.toFixed(6) });
-    setIsDialogOpen(true);
+    startTransition(() => {
+      setSelectedLocation({ latitude: lat.toFixed(6), longitude: lng.toFixed(6) });
+      setIsDialogOpen(true);
+    });
   }, []);
 
   const handleCreatePost = async (postData) => {
     try {
       await createPost({ ...postData, userId: 1 });
       toast({ title: "Success", description: "Post created successfully!" });
-      setIsDialogOpen(false);
+      startTransition(() => {
+        setIsDialogOpen(false);
+      });
     } catch (error) {
       logError('Error creating post:', error);
       toast({ title: "Error", description: error.message, variant: "destructive" });
     }
+  };
+
+  const handleNextPage = () => {
+    startTransition(() => {
+      nextPage();
+    });
+  };
+
+  const handlePrevPage = () => {
+    startTransition(() => {
+      prevPage();
+    });
   };
 
   if (error) {
@@ -51,13 +68,15 @@ export default function Home() {
       <div className="flex flex-col h-screen">
         <Header />
         <main className="flex-grow relative">
-          <Suspense fallback={<div className="flex items-center justify-center h-full"><Spinner /></div>}>
-            <LazyMapBox posts={posts} onMapClick={handleMapClick} />
-          </Suspense>
+          <ErrorBoundary fallback={<div>Error loading map. Please refresh the page.</div>}>
+            <Suspense fallback={<div className="flex items-center justify-center h-full"><Spinner /></div>}>
+              <LazyMapBox posts={posts} onMapClick={handleMapClick} />
+            </Suspense>
+          </ErrorBoundary>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <FloatingActionButton onClick={() => setIsDialogOpen(true)} />
+                <FloatingActionButton onClick={() => startTransition(() => setIsDialogOpen(true))} />
               </TooltipTrigger>
               <TooltipContent>
                 <p>Create a new post</p>
@@ -66,26 +85,26 @@ export default function Home() {
           </TooltipProvider>
           <CreatePostDialog
             isOpen={isDialogOpen}
-            onClose={() => setIsDialogOpen(false)}
+            onClose={() => startTransition(() => setIsDialogOpen(false))}
             onCreatePost={handleCreatePost}
             latitude={selectedLocation.latitude}
             longitude={selectedLocation.longitude}
           />
           <nav className="absolute bottom-4 left-4 bg-white p-2 rounded shadow" aria-label="Pagination">
             <button 
-              onClick={prevPage}
-              disabled={page === 1 || isLoading}
+              onClick={handlePrevPage}
+              disabled={page === 1 || isLoading || isPending}
               aria-label="Previous page"
               className="btn btn-secondary mr-2"
             >
               Previous
             </button>
             <span className="mx-2" aria-current="page">
-              {isLoading ? <Spinner size="sm" /> : `Page ${page} of ${totalPages}`}
+              {isLoading || isPending ? <Spinner size="sm" /> : `Page ${page} of ${totalPages}`}
             </span>
             <button 
-              onClick={nextPage}
-              disabled={page === totalPages || isLoading}
+              onClick={handleNextPage}
+              disabled={page === totalPages || isLoading || isPending}
               aria-label="Next page"
               className="btn btn-secondary ml-2"
             >
