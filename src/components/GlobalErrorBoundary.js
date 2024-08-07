@@ -4,7 +4,7 @@ import { logError } from '@/utils/errorLogging';
 class GlobalErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, error: null, errorInfo: null };
   }
 
   static getDerivedStateFromError(error) {
@@ -12,7 +12,12 @@ class GlobalErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
+    this.setState({
+      error: error,
+      errorInfo: errorInfo
+    });
     logError('Uncaught error:', error, errorInfo);
+    console.error('Uncaught error:', error, errorInfo);
   }
 
   render() {
@@ -28,6 +33,16 @@ class GlobalErrorBoundary extends React.Component {
             >
               Refresh Page
             </button>
+            {process.env.NODE_ENV === 'development' && (
+              <details className="mt-4 text-left">
+                <summary className="cursor-pointer text-blue-500">Error Details</summary>
+                <pre className="mt-2 p-4 bg-gray-100 rounded overflow-auto">
+                  {this.state.error && this.state.error.toString()}
+                  <br />
+                  {this.state.errorInfo && this.state.errorInfo.componentStack}
+                </pre>
+              </details>
+            )}
           </div>
         </div>
       );

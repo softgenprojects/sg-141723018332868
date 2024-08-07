@@ -74,11 +74,25 @@ export default function Home() {
             latitude={selectedLocation.latitude}
             longitude={selectedLocation.longitude}
           />
-          <div className="absolute bottom-4 left-4 bg-white p-2 rounded shadow">
-            <button onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}>Previous</button>
-            <span className="mx-2">Page {currentPage}</span>
-            <button onClick={() => setCurrentPage(prev => prev + 1)}>Next</button>
-          </div>
+          <nav className="absolute bottom-4 left-4 bg-white p-2 rounded shadow" aria-label="Pagination">
+            <button 
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              aria-label="Previous page"
+              className="btn btn-secondary mr-2"
+            >
+              Previous
+            </button>
+            <span className="mx-2" aria-current="page">Page {currentPage}</span>
+            <button 
+              onClick={() => setCurrentPage(prev => prev + 1)}
+              disabled={paginatedPosts.length < postsPerPage}
+              aria-label="Next page"
+              className="btn btn-secondary ml-2"
+            >
+              Next
+            </button>
+          </nav>
         </main>
       </div>
     </ErrorBoundary>
