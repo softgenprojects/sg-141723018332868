@@ -3,7 +3,7 @@ import mapboxgl from 'mapbox-gl';
 
 mapboxgl.accessToken = 'pk.eyJ1Ijoibm92ZWxpY2EiLCJhIjoiY2xjdmF0NjR6MHMwZjN3cmxnMHFpaGFjMSJ9.bBri5mIGTCFnINYa75jS4w';
 
-export default function MapBox({ posts, setLatitude, setLongitude }) {
+function MapBox({ posts, setLatitude, setLongitude }) {
   const mapContainer = useRef(null);
   const map = useRef(null);
 
@@ -66,5 +66,7 @@ export default function MapBox({ posts, setLatitude, setLongitude }) {
     };
   }, [memoizedPosts]);
 
-  return <div ref={mapContainer} className="w-full h-[600px]" />;
+  return <div ref={mapContainer} className="w-full h-[600px]" aria-label="3D Map of San Francisco" />;
 }
+
+export default MapBox;
