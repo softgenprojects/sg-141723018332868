@@ -34,10 +34,11 @@ export function CreatePostDialog({ isOpen, onClose, onCreatePost, latitude, long
             value={content}
             onChange={(e) => setContent(e.target.value)}
             className="min-h-[100px]"
+            aria-label="Post content"
           />
           <div className="flex space-x-2 mt-4">
-            <Input value={latitude} readOnly placeholder="Latitude" />
-            <Input value={longitude} readOnly placeholder="Longitude" />
+            <Input value={latitude} readOnly placeholder="Latitude" aria-label="Latitude" />
+            <Input value={longitude} readOnly placeholder="Longitude" aria-label="Longitude" />
           </div>
           <DialogFooter className="mt-4">
             <Button type="submit">Create Post</Button>

@@ -1,8 +1,18 @@
-export function logError(message, error) {
+export function logError(message, error, additionalInfo = {}) {
   console.error(message, error);
+  
+  // Log additional details
+  if (error instanceof Error) {
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+  }
+
+  console.error('Additional info:', additionalInfo);
+
   // In a production environment, you might want to send this error to a logging service
   // For example:
-  // sendErrorToLoggingService(message, error);
+  // sendErrorToLoggingService(message, error, additionalInfo);
 }
 
 export function handleApiError(error) {
@@ -23,8 +33,8 @@ export function handleApiError(error) {
 }
 
 // Placeholder function for sending errors to a logging service
-function sendErrorToLoggingService(message, error) {
+function sendErrorToLoggingService(message, error, additionalInfo) {
   // Implementation would depend on the logging service you're using
   // For example, you might use an API call to send the error data
-  console.log('Sending error to logging service:', message, error);
+  console.log('Sending error to logging service:', message, error, additionalInfo);
 }

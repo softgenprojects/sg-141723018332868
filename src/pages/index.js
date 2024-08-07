@@ -1,12 +1,14 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, Suspense, lazy } from 'react';
 import Head from 'next/head';
 import { useToast } from "@/components/ui/use-toast";
-import MapBox from '@/components/MapBox';
 import Header from '@/components/Header';
 import { FloatingActionButton } from '@/components/FloatingActionButton';
 import { CreatePostDialog } from '@/components/CreatePostDialog';
 import { usePosts } from '@/hooks/usePosts';
 import { logError } from '@/utils/errorLogging';
+import ErrorBoundary from '@/components/ErrorBoundary';
+
+const LazyMapBox = lazy(() => import('@/components/MapBox'));
 
 export default function Home() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -39,7 +41,7 @@ export default function Home() {
   if (isLoading) return <div>Loading...</div>;
 
   return (
-    <>
+    <ErrorBoundary>
       <Head>
         <title>3D Mapbox World - San Francisco</title>
         <meta name="description" content="Explore San Francisco with our 3D Mapbox World application. Create and view location-based posts." />
@@ -48,7 +50,9 @@ export default function Home() {
       <div className="flex flex-col h-screen">
         <Header />
         <main className="flex-grow relative">
-          <MapBox posts={posts} onMapClick={handleMapClick} />
+          <Suspense fallback={<div>Loading map...</div>}>
+            <LazyMapBox posts={posts} onMapClick={handleMapClick} />
+          </Suspense>
           <FloatingActionButton onClick={() => setIsDialogOpen(true)} />
           <CreatePostDialog
             isOpen={isDialogOpen}
@@ -59,6 +63,6 @@ export default function Home() {
           />
         </main>
       </div>
-    </>
+    </ErrorBoundary>
   );
 }
