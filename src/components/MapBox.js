@@ -3,7 +3,7 @@ import mapboxgl from 'mapbox-gl';
 
 mapboxgl.accessToken = 'pk.eyJ1Ijoibm92ZWxpY2EiLCJhIjoiY2xjdmF0NjR6MHMwZjN3cmxnMHFpaGFjMSJ9.bBri5mIGTCFnINYa75jS4w';
 
-export default function MapBox() {
+export default function MapBox({ posts, setLatitude, setLongitude }) {
   const mapContainer = useRef(null);
   const map = useRef(null);
 
@@ -15,7 +15,37 @@ export default function MapBox() {
       center: [-122.4194, 37.7749], // San Francisco coordinates
       zoom: 12
     });
-  }, []);
+
+    map.current.on('click', (e) => {
+      setLatitude(e.lngLat.lat.toFixed(6));
+      setLongitude(e.lngLat.lng.toFixed(6));
+    });
+  }, [setLatitude, setLongitude]);
+
+  useEffect(() => {
+    if (!map.current || !posts) return;
+
+    // Remove existing markers
+    const existingMarkers = document.getElementsByClassName('mapboxgl-marker');
+    while(existingMarkers[0]) {
+      existingMarkers[0].parentNode.removeChild(existingMarkers[0]);
+    }
+
+    // Add new markers
+    posts.forEach((post) => {
+      const el = document.createElement('div');
+      el.className = 'marker';
+      el.style.backgroundColor = '#3FB1CE';
+      el.style.width = '20px';
+      el.style.height = '20px';
+      el.style.borderRadius = '50%';
+
+      new mapboxgl.Marker(el)
+        .setLngLat([post.longitude, post.latitude])
+        .setPopup(new mapboxgl.Popup().setHTML(`<p>${post.content}</p>`))
+        .addTo(map.current);
+    });
+  }, [posts]);
 
   return <div ref={mapContainer} className="w-full h-[600px]" />;
 }
